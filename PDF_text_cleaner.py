@@ -12,10 +12,10 @@ spell = Speller(lang='ru')  # Use autocorrect for spelling correction
 tool = language_tool_python.LanguageTool('ru-RU')  # For grammatical checking
 
 # Path to the original PDF file
-pdf_path = r'/Users/aleksandrababkina/Documents/Python скрипты/Мама/рабочий проект том 4 ПДСУ.pdf'
+pdf_path = r'ПДСУ.pdf'
 
 # Path for saving the TXT file
-txt_path = r'/Users/aleksandrababkina/Documents/Python скрипты/Мама/рабочий проект том 4 ПДСУ.txt'
+txt_path = r'ПДСУ.txt'
 
 # Specify the path to Poppler
 poppler_path = "/opt/homebrew/opt/poppler"
@@ -36,7 +36,7 @@ unwanted_patterns = [
 
 with open(txt_path, "w", encoding="utf-8") as txt_file:
     # Convert PDF to images, starting from page 49
-    images = pdf2image.convert_from_path(pdf_path, first_page=49, poppler_path="/opt/homebrew/opt/poppler/bin")
+    images = pdf2image.convert_from_path(pdf_path, first_page=49, poppler_path=poppler_path)
     
     # Text recognition process for all pages
     for page_num, img in enumerate(images, start=49):
@@ -51,14 +51,16 @@ with open(txt_path, "w", encoding="utf-8") as txt_file:
         
         # Convert the text to lowercase and correct spelling
         text = text.lower()  # Convert all text to lowercase
-        words = text.split()
-        corrected_words = [spell(word) for word in words]  # Correct the spelling of each word
         
-        corrected_text = ' '.join(corrected_words)  # Rebuild the corrected text
+        # Correct spelling using Speller (batch correction)
+        corrected_text = ' '.join([spell(word) for word in text.split()])
         
         # Correct grammatical errors using LanguageTool
-        matches = tool.check(corrected_text)
-        corrected_text = language_tool_python.utils.correct(corrected_text, matches)
+        try:
+            matches = tool.check(corrected_text)
+            corrected_text = language_tool_python.utils.correct(corrected_text, matches)
+        except Exception as e:
+            print(f"Ошибка при грамматической проверке: {e}")
         
         # Write the corrected text of the page to the file
         txt_file.write(corrected_text)
